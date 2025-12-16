@@ -1,7 +1,6 @@
 // JavaQuizApp.java
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 import java.security.MessageDigest;
@@ -17,7 +16,7 @@ public class JavaQuizApp {
     static JTextArea questionArea;
     static JRadioButton[] optionButtons = new JRadioButton[4];
     static ButtonGroup bg = new ButtonGroup();
-    static JButton prevBtn, nextBtn, finishBtn, resetBtn;
+    static JButton nextBtn, finishBtn, resetBtn;
     static JLabel timerLabel;
     static JComboBox<String> themeToggle;
 
@@ -39,13 +38,13 @@ public class JavaQuizApp {
     }
 
     static void applyTheme(Component c) {
-        Color bg = (currentTheme == Theme.DARK) ? new Color(30, 30, 30) : Color.WHITE;
+        Color bgColor = (currentTheme == Theme.DARK) ? new Color(30, 30, 30) : Color.WHITE;
         Color fg = (currentTheme == Theme.DARK) ? Color.WHITE : Color.BLACK;
-        c.setBackground(bg);
+        c.setBackground(bgColor);
         if (c instanceof Container) {
             for (Component comp : ((Container) c).getComponents()) {
                 if (!(comp instanceof JButton || comp instanceof JTextField || comp instanceof JPasswordField || comp instanceof JComboBox)) {
-                    comp.setBackground(bg);
+                    comp.setBackground(bgColor);
                 }
                 comp.setForeground(fg);
                 applyTheme(comp);
@@ -229,32 +228,29 @@ public class JavaQuizApp {
         timerLabel.setFont(new Font("Arial", Font.BOLD, 18));
         quizFrame.add(timerLabel);
 
-        prevBtn = new JButton("Previous");
         nextBtn = new JButton("Next");
         finishBtn = new JButton("Finish");
         resetBtn = new JButton("Reset");
 
-        prevBtn.setBounds(250, 500, 120, 40);
-        nextBtn.setBounds(400, 500, 120, 40);
-        finishBtn.setBounds(550, 500, 120, 40);
-        resetBtn.setBounds(700, 500, 120, 40);
+        // Adjusted positions now that Previous is removed
+        nextBtn.setBounds(350, 500, 120, 40);
+        finishBtn.setBounds(500, 500, 120, 40);
+        resetBtn.setBounds(650, 500, 120, 40);
 
-        quizFrame.add(prevBtn);
         quizFrame.add(nextBtn);
         quizFrame.add(finishBtn);
         quizFrame.add(resetBtn);
+
         themeToggle = createThemeToggle(() -> {
             applyTheme(quizFrame);
             quizFrame.repaint();
         });
         themeToggle.setFont(new Font("Arial", Font.PLAIN, 12));
-        themeToggle.setBounds(880, 10, 110, 25); // smaller size & repositioned left
+        themeToggle.setBounds(880, 10, 110, 25);
         quizFrame.add(themeToggle);
-        
-        timerLabel.setBounds(1000, 10, 150, 30); // shift timer slightly right
-        
 
-        prevBtn.addActionListener(e -> navigate(-1));
+        timerLabel.setBounds(1000, 10, 150, 30);
+
         nextBtn.addActionListener(e -> navigate(1));
         finishBtn.addActionListener(e -> endQuiz());
         resetBtn.addActionListener(e -> {
@@ -287,7 +283,7 @@ public class JavaQuizApp {
             optionButtons[i].setText(questionBank[idx][i + 1]);
             optionButtons[i].setSelected(userAnswers[idx] == i + 1);
         }
-        prevBtn.setEnabled(idx > 0);
+        // No prevBtn anymore; just control Next
         nextBtn.setEnabled(idx < quizSize - 1);
     }
 
@@ -305,7 +301,13 @@ public class JavaQuizApp {
         timer = new javax.swing.Timer(1000, e -> {
             timeLeft--;
             timerLabel.setText("Time Left: " + timeLeft);
-            if (timeLeft <= 0) navigate(1);
+            if (timeLeft <= 0) {
+                if (currentQuestion < quizSize - 1) {
+                    navigate(1);
+                } else {
+                    endQuiz();
+                }
+            }
         });
         timer.start();
     }
@@ -329,7 +331,8 @@ public class JavaQuizApp {
         result.append("<h2>Your Score: ").append(score).append("/").append(quizSize).append("</h2><hr>");
         for (int i = 0; i < quizSize; i++) {
             result.append("<b>Q").append(i + 1).append(":</b> ").append(questionBank[i][0]).append("<br>");
-            result.append("Correct Answer: <span style='color:green;'>").append(questionBank[i][Integer.parseInt(questionBank[i][5])]).append("</span><br>");
+            result.append("Correct Answer: <span style='color:green;'>")
+                  .append(questionBank[i][Integer.parseInt(questionBank[i][5])]).append("</span><br>");
             result.append("Your Answer: ").append(
                 (userAnswers[i] > 0 && userAnswers[i] == Integer.parseInt(questionBank[i][5])) ?
                 "<span style='color:green;'>" + questionBank[i][userAnswers[i]] + "</span>" :
@@ -360,7 +363,7 @@ public class JavaQuizApp {
 
     static void loadQuestions() {
         fullQuestionBank.addAll(Arrays.asList(new String[][] {
-             {"Which keyword is used to define a subclass?", "extends", "implements", "inherits", "final", "1"},
+            {"Which keyword is used to define a subclass?", "extends", "implements", "inherits", "final", "1"},
             {"Which method starts a thread?", "start()", "run()", "execute()", "launch()", "1"},
             {"Which operator checks equality?", "==", "=", "equals", "!=", "1"},
             {"Which loop always executes once?", "while", "for", "do-while", "foreach", "3"},
@@ -419,7 +422,6 @@ public class JavaQuizApp {
             {"Which stores key-value pairs?", "Map", "List", "Set", "Queue", "1"},
             {"Which collection maintains order?", "List", "Set", "Map", "Queue", "1"},
             {"Which statement is used for decision?", "if", "for", "while", "switch", "1"}
-
         }));
     }
 }
